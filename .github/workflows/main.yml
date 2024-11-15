@@ -38,4 +38,9 @@ jobs:
     - name: Scan Vulnerabilities with Grype
       run: |
         grype sbom:sbom.json -o json > grype-results.json
-    
+
+    - name: Upload Grype Results
+      uses: actions/upload-artifact@v3
+      with:
+        name: grype-results
+        path: grype-results.json
