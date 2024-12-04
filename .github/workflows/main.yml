@@ -12,7 +12,7 @@ jobs:
     steps:
     - uses: actions/checkout@v3
       with:
-        fetch-depth: 0
+        fetch-depth: 0        
 
     - name: Setup Python
       uses: actions/setup-python@v5.2.0
@@ -23,24 +23,30 @@ jobs:
       run: |
         pip3 install requests
     
-    - name: Install Syft
+    - name: Download Dependency Check CLI
       run: |
-        curl -sSfL https://raw.githubusercontent.com/anchore/syft/main/install.sh | sh -s -- -b /usr/local/bin
+        curl -LO https://github.com/jeremylong/DependencyCheck/releases/download/v11.1.0/dependency-check-11.1.0-release.zip
+        unzip dependency-check-11.1.0-release.zip -d dependency-check
+        export PATH="$PATH:$(pwd)/dependency-check/bin"
 
-    - name: Install Grype
+    - name: DataBase DPCheck Extract
       run: |
-        curl -sSfL https://raw.githubusercontent.com/anchore/grype/main/install.sh | sh -s -- -b /usr/local/bin
-
-    - name: Generate SBOM with Syft
+        curl -O https://storageappsafebr.s3.us-east-2.amazonaws.com/dpcheck_database.gz
+        tar -xzvf dpcheck_database.gz -C $GITHUB_WORKSPACE
+        
+    - name: Run Dependency Check
       run: |
-        syft . -o json > sbom.json
+        dependency-check.sh \
+          --project "$(basename $GITHUB_REPOSITORY)" \
+          --scan "." \
+          --format "XML" \
+          --noupdate \
+          --data $GITHUB_WORKSPACE \
+          --suppression $GITHUB_WORKSPACE/publishedSuppressions.xml \
+          --out ./
 
-    - name: Scan Vulnerabilities with Grype
-      run: |
-        grype sbom:sbom.json -o json > grype-results.json
-
-    - name: Upload Grype Results
+    - name: Upload DpCheck Results
       uses: actions/upload-artifact@v3
       with:
-        name: grype-results
-        path: grype-results.json
+        name: dpcheck-results
+        path: dependency-check-report.xml
