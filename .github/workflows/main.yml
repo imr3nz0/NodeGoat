@@ -36,7 +36,7 @@ jobs:
         
     - name: Run Dependency Check
       run: |
-        dependency-check.sh \
+        dependency-check/dependency-check/bin/dependency-check.sh \
           --project "$(basename $GITHUB_REPOSITORY)" \
           --scan "." \
           --format "XML" \
