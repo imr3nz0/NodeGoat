@@ -24,8 +24,10 @@ jobs:
       - name: 📦 Instalando o Gitleaks
         run: |
           URL=$(curl -s https://api.github.com/repos/gitleaks/gitleaks/releases/latest \
-            | jq -r '.assets[] | select(.name | test("linux-amd64$")) | .browser_download_url')
-          curl -sSL "$URL" -o gitleaks
+            | jq -r '.assets[] | select(.name | test("linux.*tar.gz$")) | .browser_download_url')
+          echo "URL para download: $URL"
+          curl -sSL "$URL" -o gitleaks.tar.gz
+          tar -xzf gitleaks.tar.gz gitleaks
           chmod +x gitleaks
           sudo mv gitleaks /usr/local/bin/
 
