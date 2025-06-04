@@ -3,10 +3,10 @@ name: Semgrep Code Scanning
 on:
   push:
     branches:
-      - master
+      - teste
   pull_request:
     branches:
-      - master
+      - teste
 
 jobs:
   semgrep:
