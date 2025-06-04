@@ -1,0 +1,60 @@
+name: 🚀 Análises de Vulnerabilidades
+
+on:
+  push:
+    branches:
+      - master
+  pull_request:
+    branches:
+      - master
+
+jobs:
+  gitleaks:
+    name: 🔐 Varredura de Segredos com Gitleaks
+    runs-on: ubuntu-latest
+
+    permissions:
+      pull-requests: write
+      contents: read
+
+    steps:
+      - name: 🛠️ Checkout do Repositório
+        uses: actions/checkout@v4
+
+      - name: 📦 Instalando o Gitleaks
+        run: |
+          URL=$(curl -s https://api.github.com/repos/gitleaks/gitleaks/releases/latest \
+            | jq -r '.assets[] | select(.name | test("linux_x64")) | .browser_download_url')
+          echo "URL para download: $URL"
+          curl -sSL "$URL" -o gitleaks.tar.gz
+          tar -xzf gitleaks.tar.gz gitleaks
+          chmod +x gitleaks
+          sudo mv gitleaks /usr/local/bin/
+
+      - name: 🔍 Executando Gitleaks
+        run: |
+          gitleaks detect --source . --report-format json --report-path gitleaks.json --exit-code 0
+
+      - name: 📊 Exportando resultados em Markdown
+        id: create-table
+        run: |
+          COMMIT_HASH=$(git rev-parse HEAD)
+          echo "### 🔐 Resultados do Gitleaks - Commit Escaneado: \`$COMMIT_HASH\`" > gitleaks-findings.md
+          echo "" >> gitleaks-findings.md
+          echo "| VULNERABILIDADE | STATUS      | CAMINHO (Linha)                       | SEVERIDADE |" >> gitleaks-findings.md
+          echo "|------------------|-------------|---------------------------------------|------------|" >> gitleaks-findings.md
+
+          cat gitleaks.json | jq -r '
+            .[] |
+            "| \(.RuleID // "sem-regra") | VULNERÁVEL | \(.File // "desconhecido"):\(.StartLine // 0) | HIGH |"
+          ' >> gitleaks-findings.md          
+          echo ""
+          echo "✅ Arquivo gitleaks-findings.md gerado com sucesso!"
+          cat gitleaks-findings.md
+
+      - name: 💬 Gerando resultado no Pull Request
+        if: github.event_name == 'pull_request'
+        uses: marocchino/sticky-pull-request-comment@v2
+        with:
+          header: 🔐 Resultados do Gitleaks
+          path: gitleaks-findings.md
