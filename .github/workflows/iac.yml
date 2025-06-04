@@ -32,11 +32,10 @@ jobs:
           echo "| RECURSO             | ID DA REGRA      | SEVERIDADE | ARQUIVO               | LINHA |" >> checkov-findings.md
           echo "|----------------------|------------------|------------|-----------------------|-------|" >> checkov-findings.md
 
-          cat checkov.json | jq .
-          
           cat checkov.json | jq -r '
-            .results.failed_checks[] |
-            "| \(.resource) | \(.check_id) | \(.severity) | \(.file_path) | \(.file_line_range[0]) |"
+            .[]? |
+            .results.failed_checks[]? |
+            "| \(.resource) | \(.check_id) | \(.severity // "INFO") | \(.file_path) | \(.file_line_range[0]) |"
           ' >> checkov-findings.md
 
           echo ""
