@@ -1,0 +1,48 @@
+name: 🛡️ Análise de IaC com Checkov
+
+on:
+  push:
+    branches:
+      - master
+  pull_request:
+    branches:
+      - master
+
+jobs:
+  checkov:
+    name: 🔍 Análise de Segurança IaC - Checkov
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: 🛠️ Checkout do Repositório
+        uses: actions/checkout@v4
+
+      - name: 📦 Instalando Checkov
+        run: |
+          pip install checkov
+
+      - name: 🛡️ Executando Checkov
+        run: |
+          checkov -d . --quiet --compact --output json > checkov.json || true
+
+      - name: 📊 Exportando resultados em Markdown
+        run: |
+          echo "### 🛡️ Resultados do Checkov" > checkov-findings.md
+          echo "" >> checkov-findings.md
+          echo "| RECURSO             | ID DA REGRA      | SEVERIDADE | ARQUIVO               | LINHA |" >> checkov-findings.md
+          echo "|----------------------|------------------|------------|-----------------------|-------|" >> checkov-findings.md
+
+          cat checkov.json | jq -r '
+            .results.failed_checks[] |
+            "| \(.resource) | \(.check_id) | \(.severity) | \(.file_path) | \(.file_line_range[0]) |"
+          ' >> checkov-findings.md
+
+          echo "✅ Arquivo checkov-findings.md gerado com sucesso!"
+          cat checkov-findings.md
+
+      - name: 💬 Gerando resultado no Pull Request
+        if: github.event_name == 'pull_request'
+        uses: marocchino/sticky-pull-request-comment@v2
+        with:
+          header: 🛡️ Resultados do Checkov
+          path: checkov-findings.md
