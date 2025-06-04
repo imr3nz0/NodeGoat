@@ -41,22 +41,15 @@ jobs:
         id: create-table
         run: |
           echo "### Semgrep Findings Table" > findings.md
-          echo "| VULNERÁVEL | STATUS      | CAMINHO                  | SEVERIDADE |" >> findings.md
-          echo "|------------|-------------|--------------------------|------------|" >> findings.md
+          echo "" >> findings.md
+          echo "| VULNERÁVEL                        | STATUS      | CAMINHO                                | SEVERIDADE |" >> findings.md
+          echo "|------------------------------------|-------------|----------------------------------------|------------|" >> findings.md
       
           cat semgrep.json | jq -r '
             .results[] |
             "| \(.check_id | split(".")[-1]) | VULNERÁVEL | \(.path):\(.start.line) | \(.extra.severity) |"
-          ' >> findings-raw.md
+          ' >> findings.md
       
-          echo "" >> findings.md
-          echo "\`\`\`" >> findings.md
-          column -t -s'|' findings-raw.md >> findings.md
-          echo "\`\`\`" >> findings.md
-      
-          echo "Aligned Table for logs below:"
-          column -t -s'|' findings-raw.md
-
           echo ""
           echo "Final findings.md content:"
           cat findings.md
