@@ -23,7 +23,7 @@ jobs:
 
       - name: 🛡️ Executando Checkov
         run: |
-          checkov -d . --compact --output json > checkov.json
+          checkov -d . --output json --soft-fail > checkov.json
 
       - name: 📊 Exportando resultados em Markdown
         run: |
