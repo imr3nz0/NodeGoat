@@ -59,6 +59,10 @@ jobs:
           echo "Aligned Table for logs below:"
           column -t -s'|' findings-raw.md
 
+          echo ""
+          echo "Final findings.md content:"
+          cat findings.md
+
       - name: Create PR comment
         uses: marocchino/sticky-pull-request-comment@v2
         with:
