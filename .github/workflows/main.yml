@@ -43,19 +43,19 @@ jobs:
           echo "### Semgrep Findings Table" > findings.md
           echo "| ID | Status | File Path (Line) | Severity | Tool |" >> findings.md
           echo "|----|--------|------------------|----------|------|" >> findings.md
-
-          # Extrai e formata cada linha de resultado
+      
+          # Extrai e formata cada linha de resultado, pegando só o último segmento do check_id
           cat semgrep.json | jq -r '
             .results[] |
-            "| \(.check_id) | IDENTIFIED | \(.path):\(.start.line) | \(.extra.severity) | Semgrep |"
+            "| \(.check_id | split(".")[-1]) | IDENTIFIED | \(.path):\(.start.line) | \(.extra.severity) | Semgrep |"
           ' >> findings-raw.md
-
-          # Para logs alinhados e legibilidade:
+      
+          # Adiciona separador para o Markdown formatado
           echo "" >> findings.md
-          echo "```" >> findings.md
+          echo "\`\`\`" >> findings.md
           column -t -s'|' findings-raw.md >> findings.md
-          echo "```" >> findings.md
-
+          echo "\`\`\`" >> findings.md
+      
           echo "Aligned Table for logs below:"
           column -t -s'|' findings-raw.md
 
