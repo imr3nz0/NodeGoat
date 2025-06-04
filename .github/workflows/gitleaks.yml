@@ -24,7 +24,7 @@ jobs:
       - name: 📦 Instalando o Gitleaks
         run: |
           URL=$(curl -s https://api.github.com/repos/gitleaks/gitleaks/releases/latest \
-            | jq -r '.assets[] | select(.name | test("linux.*tar.gz$")) | .browser_download_url')
+            | jq -r '.assets[] | select(.name | test("linux_x64")) | .browser_download_url')
           echo "URL para download: $URL"
           curl -sSL "$URL" -o gitleaks.tar.gz
           tar -xzf gitleaks.tar.gz gitleaks
