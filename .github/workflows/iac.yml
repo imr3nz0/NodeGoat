@@ -23,7 +23,7 @@ jobs:
 
       - name: 🛡️ Executando Checkov
         run: |
-          checkov -d . --quiet --compact --output json > checkov.json || true
+          checkov -d . --compact --output json > checkov.json
 
       - name: 📊 Exportando resultados em Markdown
         run: |
@@ -31,12 +31,13 @@ jobs:
           echo "" >> checkov-findings.md
           echo "| RECURSO             | ID DA REGRA      | SEVERIDADE | ARQUIVO               | LINHA |" >> checkov-findings.md
           echo "|----------------------|------------------|------------|-----------------------|-------|" >> checkov-findings.md
-
+          
           cat checkov.json | jq -r '
             .results.failed_checks[] |
             "| \(.resource) | \(.check_id) | \(.severity) | \(.file_path) | \(.file_line_range[0]) |"
           ' >> checkov-findings.md
 
+          echo ""
           echo "✅ Arquivo checkov-findings.md gerado com sucesso!"
           cat checkov-findings.md
 
