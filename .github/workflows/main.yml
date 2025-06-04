@@ -37,19 +37,24 @@ jobs:
         run: |
           semgrep --config auto --json --output semgrep.json
 
-      - name: Create aligned Markdown table
+      - name: Create aligned Markdown table with file path & line
         id: create-table
         run: |
           echo "### Semgrep Findings Table" > findings.md
-          echo "| ID | Rule Name | Severity | Tool |" >> findings.md
-          echo "|----|-----------|----------|------|" >> findings.md
-          # Gera a tabela base sem alinhamento
-          cat semgrep.json | jq -r '.results[] | "| \(.check_id) | \(.extra.message // "-") | \(.extra.severity) | Semgrep |"' >> findings-raw.md
-          
-          # Formata a tabela de forma alinhada no log
+          echo "| ID | Status | File Path (Line) | Severity | Tool |" >> findings.md
+          echo "|----|--------|------------------|----------|------|" >> findings.md
+
+          # Extrai e formata cada linha de resultado
+          cat semgrep.json | jq -r '
+            .results[] |
+            "| \(.check_id) | IDENTIFIED | \(.path):\(.start.line) | \(.extra.severity) | Semgrep |"
+          ' >> findings-raw.md
+
+          # Para logs alinhados e legibilidade:
           echo "" >> findings.md
-          echo "Aligned Table in logs:" >> findings.md
+          echo "```" >> findings.md
           column -t -s'|' findings-raw.md >> findings.md
+          echo "```" >> findings.md
 
           echo "Aligned Table for logs below:"
           column -t -s'|' findings-raw.md
