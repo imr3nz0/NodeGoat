@@ -31,6 +31,8 @@ jobs:
           echo "" >> checkov-findings.md
           echo "| RECURSO             | ID DA REGRA      | SEVERIDADE | ARQUIVO               | LINHA |" >> checkov-findings.md
           echo "|----------------------|------------------|------------|-----------------------|-------|" >> checkov-findings.md
+
+          cat checkov.json | jq .
           
           cat checkov.json | jq -r '
             .results.failed_checks[] |
