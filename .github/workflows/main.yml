@@ -41,16 +41,14 @@ jobs:
         id: create-table
         run: |
           echo "### Semgrep Findings Table" > findings.md
-          echo "| ID | Status | File Path (Line) | Severity | Tool |" >> findings.md
-          echo "|----|--------|------------------|----------|------|" >> findings.md
+          echo "| VULNERÁVEL | STATUS      | CAMINHO                  | SEVERIDADE |" >> findings.md
+          echo "|------------|-------------|--------------------------|------------|" >> findings.md
       
-          # Extrai e formata cada linha de resultado, pegando só o último segmento do check_id
           cat semgrep.json | jq -r '
             .results[] |
-            "| \(.check_id | split(".")[-1]) | IDENTIFIED | \(.path):\(.start.line) | \(.extra.severity) | Semgrep |"
+            "| \(.check_id | split(".")[-1]) | VULNERÁVEL | \(.path):\(.start.line) | \(.extra.severity) |"
           ' >> findings-raw.md
       
-          # Adiciona separador para o Markdown formatado
           echo "" >> findings.md
           echo "\`\`\`" >> findings.md
           column -t -s'|' findings-raw.md >> findings.md
