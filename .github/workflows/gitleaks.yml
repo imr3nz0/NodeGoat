@@ -43,12 +43,11 @@ jobs:
           echo "" >> gitleaks-findings.md
           echo "| VULNERABILIDADE | STATUS      | CAMINHO (Linha)                       | SEVERIDADE |" >> gitleaks-findings.md
           echo "|------------------|-------------|---------------------------------------|------------|" >> gitleaks-findings.md
-          
+
           cat gitleaks.json | jq -r '
             .[] |
-            "| \(.ruleID) | VULNERÁVEL | \(.file):\(.line) | HIGH |"
-          ' >> gitleaks-findings.md
-          
+            "| \(.RuleID // "sem-regra") | VULNERÁVEL | \(.File // "desconhecido"):\(.StartLine // 0) | HIGH |"
+          ' >> gitleaks-findings.md          
           echo ""
           echo "✅ Arquivo gitleaks-findings.md gerado com sucesso!"
           cat gitleaks-findings.md
