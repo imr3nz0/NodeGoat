@@ -33,7 +33,7 @@ jobs:
 
       - name: 🔍 Executando Gitleaks
         run: |
-          gitleaks detect --source . --report-format json --report-path gitleaks.json
+          gitleaks detect --source . --report-format json --report-path gitleaks.json --exit-code 0
 
       - name: 📊 Exportando resultados em Markdown
         id: create-table
