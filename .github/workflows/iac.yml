@@ -17,6 +17,21 @@ jobs:
       - name: 🛠️ Checkout do Repositório
         uses: actions/checkout@v4
 
+      - name: 🛠️ Checkout do Integrador
+        uses: actions/checkout@v4
+        with:
+          repository: imr3nz0/scripts
+          path: scripts
+
+      - name: 🐍 Configuração do Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: 3.x
+
+      - name: 🚀 Executando script integrador
+        run: |
+          python scripts/semgrep.py
+
       - name: 📦 Instalando Checkov
         run: |
           pip install checkov
