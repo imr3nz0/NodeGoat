@@ -13,7 +13,7 @@ jobs:
     runs-on: ubuntu-latest
     env:
       REPO: ${{ github.event.inputs.repo || github.repository }}
-      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      GITHUB_TOKEN: ${{ secrets.TOKENALERT }}
 
     steps:
       - name: 📥 Baixar Dependabot Alerts e salvar em alerts.json
