@@ -7,23 +7,18 @@ on:
   pull_request:
     branches:
       - master
-  workflow_dispatch:
-    inputs:
-      repo:
-        description: 'Repositório (ex.: imr3nz0/NodeGoat)'
-        required: true
-        default: 'imr3nz0/NodeGoat'
 
 jobs:
   dependabot-scan:
     runs-on: ubuntu-latest
     env:
-      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} # Token automático do Actions
+      REPO: ${{ github.event.inputs.repo || github.repository }}
+      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
     steps:
       - name: 📥 Baixar Dependabot Alerts e salvar em alerts.json
         env:
-          REPO: ${{ github.event.inputs.repo }}
+          REPO: ${{ github.event.inputs.repo || github.repository }}
         run: |
           echo "Fetching Dependabot alerts for repository: $REPO"
 
