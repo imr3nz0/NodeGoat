@@ -17,8 +17,6 @@ jobs:
 
     steps:
       - name: 📥 Baixar Dependabot Alerts e salvar em alerts.json
-        env:
-          REPO: ${{ github.event.inputs.repo || github.repository }}
         run: |
           echo "Fetching Dependabot alerts for repository: $REPO"
 
@@ -31,8 +29,14 @@ jobs:
               -H "Accept: application/vnd.github+json" \
               "https://api.github.com/repos/$REPO/dependabot/alerts?per_page=100&state=open&page=$page")
 
-            # Junta o JSON anterior com o novo
-            jq -s '.[0] + .[1]' alerts.json <(echo "$response") > tmp.json && mv tmp.json alerts.json
+            # 🟩 Valida tipo antes de somar
+            if echo "$response" | jq -e 'type == "array"' >/dev/null; then
+              jq -s '.[0] + .[1]' alerts.json <(echo "$response") > tmp.json && mv tmp.json alerts.json
+            else
+              echo "⚠️ Resposta não é um array! Erro retornado pela API:"
+              echo "$response"
+              break
+            fi
 
             count=$(echo "$response" | jq length)
             if [ "$count" -lt 100 ]; then
