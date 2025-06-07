@@ -1,0 +1,80 @@
+name: Fetch Dependabot Alerts with Table and Comment
+
+on:
+  workflow_dispatch:
+    inputs:
+      repo:
+        description: 'Repositório (ex.: imr3nz0/NodeGoat)'
+        required: true
+        default: 'imr3nz0/NodeGoat'
+
+jobs:
+  dependabot-scan:
+    runs-on: ubuntu-latest
+    env:
+      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} # Token automático do Actions
+
+    steps:
+      - name: 📥 Baixar Dependabot Alerts e salvar em alerts.json
+        env:
+          REPO: ${{ github.event.inputs.repo }}
+        run: |
+          echo "Fetching Dependabot alerts for repository: $REPO"
+
+          page=1
+          echo "[]" > alerts.json
+
+          while true; do
+            echo "Fetching page: $page"
+            response=$(curl -s -H "Authorization: Bearer $GITHUB_TOKEN" \
+              -H "Accept: application/vnd.github+json" \
+              "https://api.github.com/repos/$REPO/dependabot/alerts?per_page=100&state=open&page=$page")
+
+            # Junta o JSON anterior com o novo
+            jq -s '.[0] + .[1]' alerts.json <(echo "$response") > tmp.json && mv tmp.json alerts.json
+
+            count=$(echo "$response" | jq length)
+            if [ "$count" -lt 100 ]; then
+              echo "No more pages."
+              break
+            fi
+            page=$((page+1))
+          done
+
+          echo "✅ Alerts salvos em alerts.json"
+
+      - name: 🔍 Filtrar e imprimir resultados no log
+        run: |
+          echo "🎯 Resultados filtrados:"
+          cat alerts.json | jq -r '
+            .[] | {
+              severity: .security_advisory.severity,
+              summary: .security_advisory.summary,
+              manifest_path: .dependency.manifest_path,
+              package: "\(.dependency.package.ecosystem):\(.dependency.package.name)"
+            }
+          '
+
+      - name: 📊 Exportando resultados em Markdown
+        id: create-table
+        run: |
+          echo "### 🛡️ Resultados do Dependabot" > findings.md
+          echo "" >> findings.md
+          echo "| PACOTE               | STATUS      | CAMINHO                  | SEVERIDADE |" >> findings.md
+          echo "|----------------------|-------------|--------------------------|------------|" >> findings.md
+
+          cat alerts.json | jq -r '
+            .[] |
+            "| \(.dependency.package.ecosystem):\(.dependency.package.name) | VULNERÁVEL | \(.dependency.manifest_path) | \(.security_advisory.severity) |"
+          ' >> findings.md
+
+          echo ""
+          echo "✅ Arquivo findings.md gerado com sucesso!"
+          cat findings.md
+
+      - name: 💬 Gerar comentário no Pull Request
+        if: github.event_name == 'pull_request'
+        uses: marocchino/sticky-pull-request-comment@v2
+        with:
+          header: 🚀 Resultados do Dependabot
+          path: findings.md
