@@ -13,7 +13,7 @@ jobs:
     runs-on: ubuntu-latest
     env:
       REPO: ${{ github.repository }}
-      GITHUB_TOKEN: ${{ secrets.PERSONAL_TOKEN }} # Use seu PAT para acessar Dependabot
+      GITHUB_TOKEN: ${{ secrets.TOKENALERT }}
 
     steps:
       - name: 📥 Baixando os Alertas do Dependabot
