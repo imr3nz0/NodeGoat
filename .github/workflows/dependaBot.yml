@@ -50,13 +50,23 @@ jobs:
       - name: 📊 Gerando Tabela
         run: |
           echo "PACOTE|STATUS|CAMINHO|SEVERIDADE|LINK" > findings-raw.txt
-
+      
           cat alerts.json | jq -r '
-            .[] |
+            def severity_order: {
+              "critical": 1,
+              "high": 2,
+              "medium": 3,
+              "low": 4,
+              "info": 5
+            };
+      
+            sort_by(severity_order[.security_advisory.severity] // 999)
+            | .[] |
             "\(.dependency.package.ecosystem):\(.dependency.package.name)|VULNERÁVEL|\(.dependency.manifest_path)|\(.security_advisory.severity)|\(.html_url)"
           ' >> findings-raw.txt
-
+      
           echo ""
+          echo "📋 Tabela alinhada para visualização no log:"
           column -t -s'|' findings-raw.txt
 
       - name: 📝 Gerando Arquivo Markdown findings.md
