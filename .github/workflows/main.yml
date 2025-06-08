@@ -98,6 +98,11 @@ jobs:
         with:
           python-version: 3.x
 
+      - name: ⚙️ Instalando dependências Python
+        run: |
+          python3 -m pip install --upgrade pip
+          pip install requests
+
       - name: 📦 Instalando o Gitleaks
         run: |
           URL=$(curl -s https://api.github.com/repos/gitleaks/gitleaks/releases/latest \
