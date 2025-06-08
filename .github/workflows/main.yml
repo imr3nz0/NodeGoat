@@ -76,6 +76,8 @@ jobs:
   gitleaks:
     name: 🔐 Secret Detection
     runs-on: ubuntu-latest
+    env:
+      DOJO_TOKEN: ${{ secrets.DOJO }}
 
     permissions:
       pull-requests: write
@@ -84,6 +86,17 @@ jobs:
     steps:
       - name: 🛠️ Checkout do Repositório
         uses: actions/checkout@v4
+
+      - name: 🛠️ Checkout do Integrador
+        uses: actions/checkout@v4
+        with:
+          repository: imr3nz0/scripts
+          path: scripts
+
+      - name: 🐍 Configuração do Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: 3.x
 
       - name: 📦 Instalando o Gitleaks
         run: |
@@ -98,6 +111,10 @@ jobs:
       - name: 🔍 Executando Gitleaks
         run: |
           gitleaks detect --source . --report-format json --report-path gitleaks.json --exit-code 0
+
+      - name: 🚀 Executando script integrador
+        run: |
+          python scripts/gitleaks.py --product "BodgeIt" --engagement "test2" --report gitleaks.json --dojo_token $DOJO_TOKEN
 
       - name: 📊 Exportando resultados em Markdown
         id: create-table
