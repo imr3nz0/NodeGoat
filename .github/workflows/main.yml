@@ -12,6 +12,8 @@ jobs:
   semgrep:
     name: 🚀 SAST
     runs-on: ubuntu-latest
+    env:
+      DOJO_TOKEN: ${{ secrets.DOJO }}
 
     permissions:
       pull-requests: write
@@ -22,6 +24,12 @@ jobs:
     steps:
       - name: 🛠️ Checkout do Repositório
         uses: actions/checkout@v4
+
+      - name: 🛠️ Checkout do Integrador
+        uses: actions/checkout@v4
+        with:
+          repository: imr3nz0/scripts
+          path: scripts
 
       - name: 🐍 Configuração do Python
         uses: actions/setup-python@v5
@@ -36,6 +44,10 @@ jobs:
       - name: 🛡️ Executando scan SAST
         run: |
           semgrep --config auto --json --output semgrep.json
+
+      - name: 🚀 Executando script integrador
+        run: |
+          python scripts/semgrep.py --product "BodgeIt" --engagement "test2" --report semgrep.json --dojo_token $DOJO_TOKEN
 
       - name: 📊 Exportando resultados
         id: create-table
