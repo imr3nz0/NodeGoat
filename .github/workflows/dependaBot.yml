@@ -65,12 +65,12 @@ jobs:
         run: |
           echo "### 🛡️ Resultados do Dependabot" > findings.md
           echo "" >> findings.md
-          echo "| PACOTE               | STATUS      | CAMINHO                  | SEVERIDADE |" >> findings.md
-          echo "|----------------------|-------------|--------------------------|------------|" >> findings.md
+          echo "| PACOTE               | STATUS      | CAMINHO                  | SEVERIDADE | URL                       |" >> findings.md
+          echo "|----------------------|-------------|--------------------------|------------|---------------------------|" >> findings.md
 
           cat alerts.json | jq -r '
             .[] |
-            "| \(.dependency.package.ecosystem):\(.dependency.package.name) | VULNERÁVEL | \(.dependency.manifest_path) | \(.security_advisory.severity) |"
+            "| \(.dependency.package.ecosystem):\(.dependency.package.name) | VULNERÁVEL | \(.dependency.manifest_path) | \(.security_advisory.severity) | \(.html_url) |"
           ' >> findings.md
 
           echo ""
