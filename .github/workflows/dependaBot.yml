@@ -32,7 +32,7 @@ jobs:
             if echo "$response" | jq -e 'type == "array"' >/dev/null; then
               jq -s '.[0] + .[1]' alerts.json <(echo "$response") > tmp.json && mv tmp.json alerts.json
             else
-              echo "⚠️ A resposta não é um array. Erro retornado pela API:"
+              echo "⚠️ Erro ao realizar requisição para API:"
               echo "$response"
               break
             fi
@@ -47,9 +47,8 @@ jobs:
 
           echo "✅ Arquivo alerts.json gerado com todos os alertas encontrados!"
 
-      - name: 📊 Gerando Tabela em Texto Alinhado (logs legíveis)
+      - name: 📊 Gerando Tabela
         run: |
-          echo "🔧 Gerando tabela em formato de texto puro (não Markdown)."
           echo "PACOTE|STATUS|CAMINHO|SEVERIDADE|LINK" > findings-raw.txt
 
           cat alerts.json | jq -r '
@@ -58,10 +57,10 @@ jobs:
           ' >> findings-raw.txt
 
           echo ""
-          echo "📋 Tabela gerada (alinhada e legível para logs):"
           column -t -s'|' findings-raw.txt
 
       - name: 📝 Gerando Arquivo Markdown findings.md
+        if: github.event_name == 'pull_request'
         id: gerar-tabela
         run: |
           echo "### 🛡️ Resultados de Alertas do Dependabot" > findings.md
