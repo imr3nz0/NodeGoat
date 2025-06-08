@@ -1,4 +1,4 @@
-name: Fetch Dependabot Alerts with Table and Comment
+name: DependaBot
 
 on:
   push:
@@ -12,74 +12,75 @@ jobs:
   dependabot-scan:
     runs-on: ubuntu-latest
     env:
-      REPO: ${{ github.event.inputs.repo || github.repository }}
-      GITHUB_TOKEN: ${{ secrets.TOKENALERT }}
+      REPO: ${{ github.repository }}
+      GITHUB_TOKEN: ${{ secrets.PERSONAL_TOKEN }} # Use seu PAT para acessar Dependabot
 
     steps:
-      - name: 📥 Baixar Dependabot Alerts e salvar em alerts.json
+      - name: 📥 Baixando os Alertas do Dependabot
         run: |
-          echo "Fetching Dependabot alerts for repository: $REPO"
+          echo "🔎 Iniciando busca dos alertas para o repositório: $REPO"
 
           page=1
           echo "[]" > alerts.json
 
           while true; do
-            echo "Fetching page: $page"
+            echo "📄 Buscando página: $page"
             response=$(curl -s -H "Authorization: Bearer $GITHUB_TOKEN" \
               -H "Accept: application/vnd.github+json" \
               "https://api.github.com/repos/$REPO/dependabot/alerts?per_page=100&state=open&page=$page")
 
-            # 🟩 Valida tipo antes de somar
             if echo "$response" | jq -e 'type == "array"' >/dev/null; then
               jq -s '.[0] + .[1]' alerts.json <(echo "$response") > tmp.json && mv tmp.json alerts.json
             else
-              echo "⚠️ Resposta não é um array! Erro retornado pela API:"
+              echo "⚠️ A resposta não é um array. Erro retornado pela API:"
               echo "$response"
               break
             fi
 
             count=$(echo "$response" | jq length)
             if [ "$count" -lt 100 ]; then
-              echo "No more pages."
+              echo "✅ Finalizadas as buscas. Nenhuma página adicional."
               break
             fi
             page=$((page+1))
           done
 
-          echo "✅ Alerts salvos em alerts.json"
+          echo "✅ Arquivo alerts.json gerado com todos os alertas encontrados!"
 
-      - name: 🔍 Filtrar e imprimir resultados no log
+      - name: 📊 Gerando Tabela em Texto Alinhado (logs legíveis)
         run: |
-          echo "🎯 Resultados filtrados:"
-          cat alerts.json | jq -r '
-            .[] | {
-              severity: .security_advisory.severity,
-              summary: .security_advisory.summary,
-              manifest_path: .dependency.manifest_path,
-              package: "\(.dependency.package.ecosystem):\(.dependency.package.name)"
-            }
-          '
-
-      - name: 📊 Exportando resultados em Markdown
-        id: create-table
-        run: |
-          echo "### 🛡️ Resultados do Dependabot" > findings.md
-          echo "" >> findings.md
-          echo "| PACOTE               | STATUS      | CAMINHO                  | SEVERIDADE | URL                       |" >> findings.md
-          echo "|----------------------|-------------|--------------------------|------------|---------------------------|" >> findings.md
+          echo "🔧 Gerando tabela em formato de texto puro (não Markdown)."
+          echo "PACOTE|STATUS|CAMINHO|SEVERIDADE|LINK" > findings-raw.txt
 
           cat alerts.json | jq -r '
             .[] |
-            "| \(.dependency.package.ecosystem):\(.dependency.package.name) | VULNERÁVEL | \(.dependency.manifest_path) | \(.security_advisory.severity) | \(.html_url) |"
+            "\(.dependency.package.ecosystem):\(.dependency.package.name)|VULNERÁVEL|\(.dependency.manifest_path)|\(.security_advisory.severity)|\(.html_url)"
+          ' >> findings-raw.txt
+
+          echo ""
+          echo "📋 Tabela gerada (alinhada e legível para logs):"
+          column -t -s'|' findings-raw.txt
+
+      - name: 📝 Gerando Arquivo Markdown findings.md
+        id: gerar-tabela
+        run: |
+          echo "### 🛡️ Resultados de Alertas do Dependabot" > findings.md
+          echo "" >> findings.md
+          echo "| PACOTE | STATUS | CAMINHO | SEVERIDADE | LINK |" >> findings.md
+          echo "|--------|--------|---------|------------|------|" >> findings.md
+
+          cat alerts.json | jq -r '
+            .[] |
+            "| \(.dependency.package.ecosystem):\(.dependency.package.name) | VULNERÁVEL | \(.dependency.manifest_path) | \(.security_advisory.severity) | [🔗 Ver alerta](\(.html_url)) |"
           ' >> findings.md
 
           echo ""
-          echo "✅ Arquivo findings.md gerado com sucesso!"
+          echo "✅ Arquivo findings.md gerado com a tabela em Markdown para comentários no PR."
           cat findings.md
 
-      - name: 💬 Gerar comentário no Pull Request
+      - name: 💬 Publicando Comentário no Pull Request
         if: github.event_name == 'pull_request'
         uses: marocchino/sticky-pull-request-comment@v2
         with:
-          header: 🚀 Resultados do Dependabot
+          header: 🚀 Resultado da Varredura de Alertas do Dependabot
           path: findings.md
