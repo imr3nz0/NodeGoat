@@ -10,7 +10,7 @@ on:
 
 jobs:
   semgrep:
-    name: 🚀 SAST
+    name: 🚀 SASasdT
     runs-on: ubuntu-latest
     env:
       DOJO_TOKEN: ${{ secrets.DOJO }}
