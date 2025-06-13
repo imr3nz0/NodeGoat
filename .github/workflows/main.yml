@@ -47,7 +47,7 @@ jobs:
 
       - name: 🚀 Executando script integrador
         run: |
-          python scripts/semgrep.py --product "BodgeIt" --engagement "test2" --report semgrep.json --dojo_token $DOJO_TOKEN
+          python scripts/semgrep.py --product "test" --engagement "test-repo" --report semgrep.json --dojo_token $DOJO_TOKEN
 
       - name: 📊 Exportando resultados
         id: create-table
@@ -119,7 +119,7 @@ jobs:
 
       - name: 🚀 Executando script integrador
         run: |
-          python scripts/gitleaks.py --product "BodgeIt" --engagement "test2" --report gitleaks.json --dojo_token $DOJO_TOKEN
+          python scripts/gitleaks.py --product "test" --engagement "test-repo" --report gitleaks.json --dojo_token $DOJO_TOKEN
 
       - name: 📊 Exportando resultados em Markdown
         id: create-table
